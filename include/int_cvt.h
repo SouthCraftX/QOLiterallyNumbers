@@ -1,8 +1,11 @@
 #pragma once
-#define __QOLN_INT_CVT_H__
+#include <cctype>
+#include <cstdint>
+#define __qo_INT_CVT_H__
 
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -11,8 +14,9 @@ extern "C" {
 /// @brief Convert a 64 bit unsigned integer that is less than 10000 to a 5 byte string
 /// @param x The integer to convert
 /// @param buffer The buffer to store the string in. The size of the buffer must be at least 5 bytes.
+inline
 void
-qoln_4udec_to_str(
+qo_4udec_to_str(
     uint64_t    x ,
     char*       buffer
 ) {
@@ -34,8 +38,9 @@ qoln_4udec_to_str(
 /// @param x The integer to convert
 /// @param buffer The buffer to store the string in. The size of the buffer must be at least 3 bytes.
 /// @return The length of the string
+inline
 uint32_t
-qoln_2idec_to_str(
+qo_2idec_to_str(
     int64_t     x ,
     char*       buffer
 ) {
@@ -55,8 +60,9 @@ qoln_2idec_to_str(
     return 0;
 }
 
+inline
 uint32_t
-qoln_3udec_to_str(
+qo_3udec_to_str(
     uint64_t    x ,
     char*       buffer
 ) {
@@ -65,7 +71,7 @@ qoln_3udec_to_str(
     uint32_t digits;
 
     if (x <= 99)
-        return qoln_2idec_to_str(x, buffer);
+        return qo_2idec_to_str(x, buffer);
 
     low = x;
     digits = (low > 999) ? 4 : 3;
@@ -101,8 +107,9 @@ qoln_3udec_to_str(
 /// @param x The integer to convert
 /// @param buffer The buffer to store the string in. The size of the buffer must be at least 8 bytes.
 /// @return The length of the string
+inline
 uint32_t
-qoln_10udec_to_str(
+qo_10udec_to_str(
     uint64_t    x ,
     char*       buffer
 ) {
@@ -114,18 +121,17 @@ qoln_10udec_to_str(
     // fits into single 64-bit CPU register
     if (x <= 9999)
     {
-            return qoln_2idec_to_str(x, buffer);
+        return qo_2idec_to_str(x, buffer);
     }
     else if (x < 100000000)
     {
         low = x;
 
         // more than 6 digits?
-        if (low > 999999) {
-                digits = (low > 9999999) ? 8 : 7;
-        } else {
-                digits = (low > 99999) ? 6 : 5;
-        }
+        if (low > 999999) 
+            digits = (low > 9999999) ? 8 : 7;
+        else 
+            digits = (low > 99999) ? 6 : 5;
     }
     else
     {
@@ -133,7 +139,7 @@ qoln_10udec_to_str(
         low = x - (high * 100000000);
         // h will be at most 42
         // calc num digits
-        digits = qoln_2idec_to_str(high, buffer);
+        digits = qo_2idec_to_str(high, buffer);
         digits += 8;
     }
 
@@ -178,12 +184,13 @@ qoln_10udec_to_str(
     return digits;
 }
 
+inline
 void
-qoln_udec_to_str(
+qo_udec17_to_str(
     uint64_t    x ,
     char*       buffer
 ) {
-        // assert(x < 10000`00000`00000`00);
+    assert(x < 100000000000000000ULL);
     const uint64_t magic_lo = (0x00FFFFFFFFFFFFFF / 10000) + 1;
     const uint64_t magic_hi = (0xFFFFFFFFFFFFFFFF / (100000000 >> 4)) + 1;
 
@@ -219,7 +226,113 @@ qoln_udec_to_str(
 
     memcpy(&buffer[0], &out1, 8);
     memcpy(&buffer[8], &out0, 8);
-    //buffer[16] = '\0';
+    buffer[16] = '\0';
+}
+
+// mulx
+static inline
+uint64_t __lulz_mul128(uint64_t* x, uint64_t y) {
+    // 64:64 = 64*64
+    __uint128_t v = (__uint128_t)(*x) * y;
+    *x = (uint64_t)v;
+    return v >> 64;
+}
+
+// lulz method
+inline
+void
+qo_idec20_to_str(
+    int64_t     x ,
+    char*       buffer
+) {
+    // split the uint64_t into 4 streams (18446`74407`37095`51615)
+    uint64_t top = x / 10000000000;
+    uint64_t bottom = x % 10000000000;
+    uint64_t x3 = top / 100000;
+    uint64_t x2 = top % 100000;
+    uint64_t x1 = bottom / 100000;
+    uint64_t x0 = bottom % 100000;
+
+    // divide each value by 10000 but keep the remainder
+    const uint64_t M = (0xFFFFFFFFFFFFFFFFULL / 10000) + 1;
+    buffer[0]  = 0x30 + __lulz_mul128(&x3, M);
+    buffer[5]  = 0x30 + __lulz_mul128(&x2, M);
+    buffer[10] = 0x30 + __lulz_mul128(&x1, M);
+    buffer[15] = 0x30 + __lulz_mul128(&x0, M);
+
+    // get the rest of the digits by multiplying the remainder by 10
+    for (int i = 1; i < 5; i++) {
+        buffer[i + 0]  = 0x30 + __lulz_mul128(&x3, 10);
+        buffer[i + 5]  = 0x30 + __lulz_mul128(&x2, 10);
+        buffer[i + 10] = 0x30 + __lulz_mul128(&x1, 10);
+        buffer[i + 15] = 0x30 + __lulz_mul128(&x0, 10);
+    }
+    buffer[20] = 0;
+}
+
+
+inline
+uint32_t
+qo_str_to_u32(
+    const char*  str
+) {
+    assert(isdigit(str[0]));
+
+    uint32_t x = 0;
+    for (char c = str[0] ; c >= '0' && c <= '9' ; c = *(str++)) 
+        x = (x << 1) + (x << 3) + c - '0';
+    return x;
+}
+
+inline
+uint64_t
+qo_str_to_u64(
+    const char*  str
+) {
+    assert(isdigit(str[0]));
+
+    uint64_t x = 0;
+    for (char c = str[0] ; c >= '0' && c <= '9' ; c = *(str++))
+        x = (x << 1) + (x << 3) + c - '0';
+    return x;
+}
+
+inline 
+int32_t
+qo_str_to_i32(
+    const char*  str
+) {
+    char first = str[0];
+    int32_t sign_mask = 0;
+
+    if (first == '-') 
+    {
+        sign_mask = 0x80000000;
+        str++;
+    }
+    else if (first == '+') 
+        str++;
+    
+    return sign_mask | qo_str_to_u32(str);
+}
+
+inline
+int64_t
+qo_str_to_i64(
+    const char*  str
+) {
+    char first = str[0];
+    int64_t sign_mask = 0;
+
+    if (first == '-') 
+    {
+        sign_mask = 0x8000000000000000LL;
+        str++;
+    }
+    else if (first == '+') 
+        str++;
+    
+    return sign_mask | qo_str_to_u64(str);
 }
 
 #if defined(__cplusplus)
