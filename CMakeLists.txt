@@ -1,2 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
-project(QuickOK_LiteralNumbers)
+project(QuickOK-BlitzDigits)
+
+if(NOT DEFINED QOZERO_SOURCE_ROOT)
+    if(EXISTS ${CMAKE_SOURCE_DIR}/../QuickOK-Zero)
+        set(QOZERO_SOURCE_ROOT ${CMAKE_SOURCE_DIR}/../QuickOK-Zero)
+        message(STATUS "QOZERO_SOURCE_ROOT not set but QuickOK-Zero found in the parent directory")
+    else()
+        message(FATAL_ERROR "QOZERO_SOURCE_ROOT not set and QuickOK-Zero not found in the parent directory")
+    endif()
+endif()
