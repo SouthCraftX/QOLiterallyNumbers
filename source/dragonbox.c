@@ -7,18 +7,18 @@
 
 // Type Aliases based on policy
 #if QOBD_DRBX_INT_TYPES_POLICY == QOBD_DRBX_INT_TYPES_MATCH
-typedef uint32_t    remainder_f32_t;
+typedef qo_uint32_t    remainder_f32_t;
 typedef qo_int32_t  dec_exp_f32_t;
 typedef qo_int32_t  shift_f32_t;
-typedef uint64_t    remainder_f64_t;
+typedef qo_uint64_t    remainder_f64_t;
 typedef qo_int32_t  dec_exp_f64_t;    // Often fits in 32-bit
 typedef qo_int32_t  shift_f64_t;
 #elif QOBD_DRBX_INT_TYPES_POLICY == QOBD_DRBX_INT_TYPES_PREFER_32
-typedef uint32_t    remainder_f32_t;
+typedef qo_uint32_t    remainder_f32_t;
 typedef qo_int32_t  dec_exp_f32_t;
 typedef qo_int32_t  shift_f32_t;
-// Check if 64-bit remainder bound fits in uint32_t (it doesn't)
-typedef uint64_t    remainder_f64_t;
+// Check if 64-bit remainder bound fits in qo_uint32_t (it doesn't)
+typedef qo_uint64_t    remainder_f64_t;
 typedef qo_int32_t  dec_exp_f64_t;
 typedef qo_int32_t  shift_f64_t;
 #elif QOBD_DRBX_INT_TYPES_POLICY == QOBD_DRBX_INT_TYPES_MINIMAL
@@ -359,7 +359,7 @@ umul96_lower64(
 //------------------------------------------------------------------------------
 // Logarithm Approximations
 //------------------------------------------------------------------------------
-// These directly translate the C++ constexpr functions into static inline C functions.
+// These directly translate the C++ constexpr functions into static extern inline C functions.
 // The min/max exponent checks are now done via asserts at runtime if NDEBUG is not defined.
 // floor(log10(2^e))
 QO_FORCE_INLINE qo_int16_t
@@ -370,7 +370,7 @@ floor_log10_pow2(
     // Max |e| for f64 is ~1075. Max product ~340e6, fits in qo_int32_t.
     // Output range for f64: [-323, 323], fits in qo_int16_t.
     assert(e >= -2620 && e <= 2620); // Range from C++ version
-    return (qo_int16_t) (((int64_t) e * INT32_C(315653)) >> 20);
+    return (qo_int16_t) (((qo_int64_t) e * INT32_C(315653)) >> 20);
 }
 // floor(log2(10^e))
 QO_FORCE_INLINE qo_int16_t
@@ -381,7 +381,7 @@ floor_log2_pow10(
     // Max |e| for f64 is ~326. Max product ~568e6, fits in qo_int32_t.
     // Output range for f64: [-970, 1082], fits in qo_int16_t.
     assert(e >= -1233 && e <= 1233); // Range from C++ version
-    return (qo_int16_t) (((int64_t) e * INT32_C(1741647)) >> 19);
+    return (qo_int16_t) (((qo_int64_t) e * INT32_C(1741647)) >> 19);
 }
 // floor(log10(2^e / (4/3))) = floor(log10(3 * 2^(e-2))))
 QO_FORCE_INLINE qo_int16_t
@@ -391,7 +391,7 @@ floor_log10_pow2_minus_log10_4_over_3(
     // Using formula from C++ version: floor(e*log10(2) - log10(4/3)) approx floor((e*631305 -
     // 261663) / 2^21)
     assert(e >= -2985 && e <= 2936); // Range from C++ version
-    return (qo_int16_t) (((int64_t) e * INT32_C(631305) - INT32_C(261663)) >>
+    return (qo_int16_t) (((qo_int64_t) e * INT32_C(631305) - INT32_C(261663)) >>
         21);
 }
 // floor(log5(2^e))
@@ -401,7 +401,7 @@ floor_log5_pow2(
 ) {
     // Using formula from C++ version: floor(e*log5(2)) approx floor(e * 225799 / 2^19)
     assert(e >= -1831 && e <= 1831);
-    return (qo_int32_t) (((int64_t) e * INT32_C(225799)) >> 19);
+    return (qo_int32_t) (((qo_int64_t) e * INT32_C(225799)) >> 19);
 }
 // floor(log5(2^e / 3))
 QO_FORCE_INLINE qo_int32_t
@@ -411,7 +411,7 @@ floor_log5_pow2_minus_log5_3(
     // Using formula from C++ version: floor(e*log5(2) - log5(3)) approx floor((e*451597 - 715764) /
     // 2^20)
     assert(e >= -3543 && e <= 2427);
-    return (qo_int32_t) (((int64_t) e * INT32_C(451597) - INT32_C(715764)) >>
+    return (qo_int32_t) (((qo_int64_t) e * INT32_C(451597) - INT32_C(715764)) >>
         20);
 }
 //------------------------------------------------------------------------------

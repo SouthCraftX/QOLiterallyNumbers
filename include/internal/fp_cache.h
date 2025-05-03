@@ -6,7 +6,7 @@
 #include "../../../QOZero/include/qozero.h"
 
 static 
-uint64_t __qo_fp32_cache[78]{
+qo_uint64_t __qo_fp32_cache[78]{
     UINT64_C(0x81ceb32c4b43fcf5) , UINT64_C(0xa2425ff75e14fc32) ,
     UINT64_C(0xcad2f7f5359a3b3f) , UINT64_C(0xfd87b5f28300ca0e) ,
     UINT64_C(0x9e74d1b791e07e49) , UINT64_C(0xc612062576589ddb) ,

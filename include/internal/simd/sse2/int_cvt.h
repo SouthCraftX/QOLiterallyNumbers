@@ -6,12 +6,12 @@
 #include <emmintrin.h>
 #include <stdint.h>
 
-inline
+extern inline
 void 
-qo_bin64_to_fixed65_str_sse4(uint64_t x, char buffer[65]) {
+qo_bin64_to_untrimmed_str_sse4(qo_uint64_t x, char buffer[65]) {
     // 将64位整数拆分为高32位和低32位，并转换为大端序
-    const uint32_t val_hi = __builtin_bswap32((uint32_t)(x >> 32)); // 高32位大端序
-    const uint32_t val_lo = __builtin_bswap32((uint32_t)x);         // 低32位大端序
+    const qo_uint32_t val_hi = __builtin_bswap32((qo_uint32_t)(x >> 32)); // 高32位大端序
+    const qo_uint32_t val_lo = __builtin_bswap32((qo_uint32_t)x);         // 低32位大端序
 
     // 预计算静态掩码（避免重复生成）
     static const __m128i bit_mask = _mm_setr_epi8(
@@ -60,24 +60,24 @@ qo_bin64_to_fixed65_str_sse4(uint64_t x, char buffer[65]) {
     buffer[64] = '\0';
 }
 
-inline
+extern inline
 void
-qo_bin64_to_fixed65_str_sse2(
-    uint64_t x ,
-    char * buffer
+qo_bin64_to_untrimmed_str_sse2(
+    qo_uint64_t x ,
+    qo_cstring_t buffer
 ) {
     buffer[64] = '\0';
-    const char * lookup = __qo_bin_to_str_table;
+    qo_ccstring_t lookup = __qo_bin_to_str_table;
     for (int chunk = 0 ; chunk < 4 ; ++chunk)
     {
         // Extract 16 bits
-        uint16_t chunk_val = (value >> (48 - chunk * 16)) & 0xFFFF;
+        qo_uint16_t chunk_val = (value >> (48 - chunk * 16)) & 0xFFFF;
         
         // Process 4 nibbles in this chunk
-        uint8_t nibble0 = (chunk_val >> 12) & 0xF;
-        uint8_t nibble1 = (chunk_val >> 8) & 0xF;
-        uint8_t nibble2 = (chunk_val >> 4) & 0xF;
-        uint8_t nibble3 = chunk_val & 0xF;
+        qo_uint8_t nibble0 = (chunk_val >> 12) & 0xF;
+        qo_uint8_t nibble1 = (chunk_val >> 8) & 0xF;
+        qo_uint8_t nibble2 = (chunk_val >> 4) & 0xF;
+        qo_uint8_t nibble3 = chunk_val & 0xF;
         
         // Use SIMD to load and store 16 characters at once
         __m128i chars0 = _mm_loadu_si32(lookup[nibble0]);
@@ -95,11 +95,11 @@ qo_bin64_to_fixed65_str_sse2(
     }
 }
 
-inline
+extern inline
 void
 qo_16udec_to_fixed_str_sse2(
-    uint64_t x ,
-    char * buffer
+    qo_uint64_t x ,
+    qo_cstring_t buffer
 ) {
     
   // v is 16-digit number = abcdefghijklmnop
@@ -117,8 +117,8 @@ qo_16udec_to_fixed_str_sse2(
   const __m128i ascii0 = _mm_set1_epi8('0');
 
   // can't be easliy done in SSE
-  const uint32_t a = v / 100000000; // 8-digit number: abcdefgh
-  const uint32_t b = v % 100000000; // 8-digit number: ijklmnop
+  const qo_uint32_t a = v / 100000000; // 8-digit number: abcdefgh
+  const qo_uint32_t b = v % 100000000; // 8-digit number: ijklmnop
 
   //                [ 3 | 2 | 1 | 0 | 3 | 2 | 1 | 0 | 3 | 2 | 1 | 0 | 3 | 2 | 1
   //                | 0 ]

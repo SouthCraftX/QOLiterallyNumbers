@@ -10,28 +10,28 @@
 extern "C" {
 #endif // __cplusplus
 
-inline
-char const *
+extern inline
+qo_ccstring_t
 qo_trim_str_front_zeros_neon(
-    char const * str
+    qo_ccstring_t str
 ) {
     if (!str)
     {
         return NULL;
     }
 
-    char const * ptr  = str;
-    const size_t  len = strlen(str);
+    qo_ccstring_t ptr  = str;
+    const qo_size_t  len = strlen(str);
 
-    char const *  end = str + len;
+    qo_ccstring_t  end = str + len;
 
-    char const *  simd_limit = end - 15;
+    qo_ccstring_t  simd_limit = end - 15;
     const uint8x16_t  zero_v = vdupq_n_u8('0');
     while ((uintptr_t) ptr < (uintptr_t) simd_limit)
     {
-        uint8x16_t  chunk = vld1q_u8((uint8_t const *) ptr);
+        uint8x16_t  chunk = vld1q_u8((qo_uint8_t const *) ptr);
         uint8x16_t  comparison_mask_vec = vceqq_u8(chunk , zeros_v);
-        uint8_t  min_val_16 = vminvq_u8(comparison_mask_vec);
+        qo_uint8_t  min_val_16 = vminvq_u8(comparison_mask_vec);
 
         if (min_val_16 == 0xFF)
         {
@@ -41,7 +41,7 @@ qo_trim_str_front_zeros_neon(
         else {
             // Found non-'0' within this 16-byte chunk. Check first 8 bytes.
             uint8x8_t  low_mask_8 = vget_low_u8(comparison_mask_vec);
-            uint8_t    min_val_low_8 = vminv_u8(low_mask_8);
+            qo_uint8_t    min_val_low_8 = vminv_u8(low_mask_8);
 
             if (min_val_low_8 == 0xFF)
             {

@@ -6,14 +6,14 @@ extern "C" {
 #endif // defined (__cplusplus)
 
 
-#include "../../QuickOK-Zero/include/qozero.h"
+#include "qozero.h"
 
 struct _QO_DecimalFPExtract
 {
     qo_uint64_t significand;
     qo_int8_t   exponent;
     qo_uint8_t  significand_demical_digits;
-    qo_uint8_t  exponent_digits;
+    qo_uint8_t  exponent_demical_digits;
     qo_bool_t   is_negative;
 
     /// @brief Whether the significand is a pure integer.
@@ -40,7 +40,7 @@ typedef enum
     QO_FP_DEC2BIN_ROUND_TOWARD_NEGATIVE_INF ,
     QO_FP_DEC2BIN_ROUND_TOWARD_ZERO ,
     QO_FP_DEC2BIN_ROUND_TOWARD_AWAY_FROM_ZERO 
-} QO_FPDecimalToBinaryRoundNearestPolicy;
+} QO_FPDecimalToBinaryRoundPolicy;
 
 #define QO_DEFAULT_FP_DEC2BIN_ROUND_POLICY QO_FP_DEC2BIN_ROUND_NEAREST_TO_EVEN
 
@@ -76,7 +76,7 @@ typedef enum
     /// @details It is equal to "round half-down" and can result in negative bias.
     ///          It is suitable for truncation. Usually it is very efficient.
     QO_FP_BIN2DEC_ROUND_TOWARD_ZERO 
-} QO_FPBinaryToDecimalRoundNearestPolicy;
+} QO_FPBinaryToDecimalRoundPolicy;
 
 #define QO_DEFAULT_FP_BIN2DEC_ROUND_POLICY QO_FP_BIN2DEC_ROUND_TO_EVEN
 
@@ -97,13 +97,13 @@ typedef enum
 QO_DecimalFPExtract
 qo_fp64_extract_decimal(
     qo_fp64_t               value ,
-    QO_FPDecimalToBinaryRoundNearestPolicy round_policy
+    QO_FPDecimalToBinaryRoundPolicy round_policy
 );
 
 QO_DecimalFPExtract
 qo_fp32_extract_decimal(
     qo_fp32_t value ,
-    QO_FPDecimalToBinaryRoundNearestPolicy round_policy
+    QO_FPDecimalToBinaryRoundPolicy round_policy
 );
 
 qo_size_t

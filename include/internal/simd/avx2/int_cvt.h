@@ -5,15 +5,15 @@
 #include <immintrin.h>
 
 // tested working
-inline
+extern inline
 void 
-qo_bin64_to_fixed65_str_avx2(
-    uint64_t x, 
+qo_bin64_to_untrimmed_str_avx2(
+    qo_uint64_t x, 
     char buffer[65]
 ) {
     // 将64位整数拆分为高32位和低32位，并转换为大端序
-    const uint32_t val_hi = __builtin_bswap32((uint32_t)(x >> 32));
-    const uint32_t val_lo = __builtin_bswap32((uint32_t)x);
+    const qo_uint32_t val_hi = __builtin_bswap32((qo_uint32_t)(x >> 32));
+    const qo_uint32_t val_lo = __builtin_bswap32((qo_uint32_t)x);
 
     // 预计算静态掩码（避免重复生成）
     static const __m256i bit_mask = _mm256_setr_epi8(
@@ -52,16 +52,16 @@ qo_bin64_to_fixed65_str_avx2(
 }
 
 // tested working
-inline
+extern inline
 void 
-qo_hex64_to_fixed17_str_avx2(
-    uint64_t value , 
+qo_hex64_to_untrimmed_str_avx2(
+    qo_uint64_t value , 
     char* buffer
 ) {
     // Create byte array from the 64-bit value
     union {
-        uint64_t val;
-        uint8_t bytes[8];
+        qo_uint64_t val;
+        qo_uint8_t bytes[8];
     } u;
     u.val = __builtin_bswap64(value); // Ensure big-endian byte order
     
@@ -107,7 +107,7 @@ qo_hex64_to_fixed17_str_avx2(
 }
 
 
-inline __m128i parse_8digit_integers_simd_reverse(__m256i base10_8bit) {
+extern inline __m128i parse_8digit_integers_simd_reverse(__m256i base10_8bit) {
     const __m256i DIGIT_VALUE_BASE10_8BIT =
         _mm256_set_epi8(1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1,
                         10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10);

@@ -10,20 +10,20 @@
 #include <arm_neon.h>
 
 // tested working
-inline void
+extern inline void
 qo_udec17_to_fixed_str_neon(
-    uint64_t    x,
+    qo_uint64_t    x,
     char*       buffer
 ) {
     assert(x < 100000000000000000ULL);
     
     // Split the number into high and low parts
-    uint64_t hi = x / 100000000;
-    uint64_t lo = x % 100000000;
+    qo_uint64_t hi = x / 100000000;
+    qo_uint64_t lo = x % 100000000;
     
     // Use scalar operations for the initial calculations with magic numbers
-    const uint64_t magic_lo = (0x00FFFFFFFFFFFFFF / 10000) + 1;
-    const uint64_t magic_hi = (0xFFFFFFFFFFFFFFFF / (100000000 >> 4)) + 1;
+    const qo_uint64_t magic_lo = (0x00FFFFFFFFFFFFFF / 10000) + 1;
+    const qo_uint64_t magic_hi = (0xFFFFFFFFFFFFFFFF / (100000000 >> 4)) + 1;
     
     lo = ((lo * magic_lo) & 0x00FFFFFF00000000) +
                 (((lo >> 4) * magic_hi) >> 40) + 0x0000000100000001;
@@ -31,10 +31,10 @@ qo_udec17_to_fixed_str_neon(
                 (((hi >> 4) * magic_hi) >> 40) + 0x0000000100000001;
     
     // Split 64-bit values into 32-bit chunks for NEON processing
-    uint32_t lo_low = (uint32_t)lo;
-    uint32_t lo_high = (uint32_t)(lo >> 32);
-    uint32_t hi_low = (uint32_t)hi;
-    uint32_t hi_high = (uint32_t)(hi >> 32);
+    qo_uint32_t lo_low = (qo_uint32_t)lo;
+    qo_uint32_t lo_high = (qo_uint32_t)(lo >> 32);
+    qo_uint32_t hi_low = (qo_uint32_t)hi;
+    qo_uint32_t hi_high = (qo_uint32_t)(hi >> 32);
     
     // Load into NEON registers - we'll process all 4 32-bit values in parallel
     uint32x4_t values = {lo_low, lo_high, hi_low, hi_high};
@@ -69,11 +69,11 @@ qo_udec17_to_fixed_str_neon(
     out = vorrq_u32(out, temp);
     
     // Extract results and reconstruct 64-bit values
-    uint32_t out_array[4];
+    qo_uint32_t out_array[4];
     vst1q_u32(out_array, out);
     
-    uint64_t out0 = ((uint64_t)out_array[1] << 32) | out_array[0];
-    uint64_t out1 = ((uint64_t)out_array[3] << 32) | out_array[2];
+    qo_uint64_t out0 = ((qo_uint64_t)out_array[1] << 32) | out_array[0];
+    qo_uint64_t out1 = ((qo_uint64_t)out_array[3] << 32) | out_array[2];
     
     // Write to buffer
     memcpy(&buffer[0], &out1, 8);
@@ -83,12 +83,12 @@ qo_udec17_to_fixed_str_neon(
 
 // tested working
 // NEON-optimized implementation for converting a 64-bit integer to a 17-character hex string
-inline 
+extern inline 
 void
-__qo_hex64_to_fixed17_str_common_neon(
-    uint64_t    x,
+__qo_hex64_to_untrimmed_str_common_neon(
+    qo_uint64_t    x,
     char*       buffer,
-    const char *hex_table
+    qo_ccstring_thex_table
 ) {
     // x = __builtin_bswap64(x);
 // Pre-load the hex table into NEON registers if it's static
@@ -113,6 +113,6 @@ __qo_hex64_to_fixed17_str_common_neon(
     uint8x16_t result_chars = vqtbl1q_u8(hex_chars_0_to_15, ordered_nibbles);
 
     // Store the result
-    vst1q_u8((uint8_t*)buffer, result_chars);
+    vst1q_u8((qo_uint8_t*)buffer, result_chars);
     buffer[16] = '\0';
 }

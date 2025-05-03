@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+CMakeCache.txt
+cmake_install.cmake
+build.ninja
+compile_commands.json
+CMakeFiles/*
+
+build/*
+.vscode/*
+.cache/*
